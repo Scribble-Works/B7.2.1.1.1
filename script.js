@@ -1,120 +1,153 @@
+// ======================
+// CONFIGURATION
+// ======================
 const TOTAL_QUESTIONS = 10;
-let currentQuestion = 0;
-let score = 0;
-let currentSequence = [];
-let correctNextTerm = 0;
-let correctDifference = 0;
+const FEEDBACK_DELAY_MS = 2500; // Time before auto-advancing
 
-// --- SCREEN MANAGEMENT ---
+// ======================
+// GAME STATE
+// ======================
+let gameState = {
+    currentQuestion: 0,
+    score: 0,
+    sequence: [],
+    correctNextTerm: 0,
+    correctDifference: 0
+};
 
-function showScreen(id) {
-    // Hide all screens
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.add('hidden');
-    document.getElementById('results-screen').classList.add('hidden');
-    
-    // Show the requested screen
-    document.getElementById(id).classList.remove('hidden');
+// ======================
+// DOM ELEMENTS
+// ======================
+const elements = {
+    startScreen: document.getElementById('start-screen'),
+    gameScreen: document.getElementById('game-screen'),
+    resultsScreen: document.getElementById('results-screen'),
+    questionCounter: document.getElementById('question-counter'),
+    sequenceDisplay: document.getElementById('sequence-display'),
+    nextTermInput: document.getElementById('next-term'),
+    differenceInput: document.getElementById('difference'),
+    feedback: document.getElementById('feedback'),
+    finalScore: document.getElementById('final-score')
+};
+
+// ======================
+// SOUND HELPER
+// ======================
+function playSound(soundId) {
+    const sound = document.getElementById(soundId);
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {
+            // Silently ignore autoplay errors (safe after user interaction)
+        });
+    }
 }
 
-function startGame() {
-    currentQuestion = 0;
-    score = 0;
-    generateNewSequence();
-    showScreen('game-screen');
+// ======================
+// SCREEN MANAGEMENT
+// ======================
+function showScreen(screenId) {
+    elements.startScreen.classList.add('hidden');
+    elements.gameScreen.classList.add('hidden');
+    elements.resultsScreen.classList.add('hidden');
+
+    document.getElementById(screenId).classList.remove('hidden');
 }
 
-function endGame() {
-    document.getElementById('final-score').textContent = `Your final score: ${score}/${TOTAL_QUESTIONS}`;
-    showScreen('results-screen');
-}
+// ======================
+// GAME LOGIC
+// ======================
+function generateSequence() {
+    const { currentQuestion } = gameState;
 
-// --- GAME LOGIC ---
-
-function generateNewSequence() {
-    // Increment question counter and check if the game is over
-    currentQuestion++;
-    if (currentQuestion > TOTAL_QUESTIONS) {
+    // End game if all questions are done
+    if (currentQuestion >= TOTAL_QUESTIONS) {
         endGame();
         return;
     }
-    
-    // Update question display
-    document.getElementById('question-counter').textContent = `Question ${currentQuestion} of ${TOTAL_QUESTIONS}`;
-    
-    // 1. Determine the difference (the rule)
-    // Random difference between 2 and 10, positive or negative
-    let difference = Math.floor(Math.random() * 9) + 2; 
-    if (Math.random() < 0.5) {
-        difference = -difference; 
-    }
-    
-    // 2. Determine the starting number
-    let startTerm = Math.floor(Math.random() * 50) + 5; 
 
-    // 3. Generate the first 4 terms of the sequence
-    currentSequence = [];
-    let term = startTerm;
+    // Update UI
+    elements.questionCounter.textContent = `Question ${currentQuestion + 1} of ${TOTAL_QUESTIONS}`;
+
+    // Generate random difference: ±2 to ±10
+    const baseDiff = Math.floor(Math.random() * 9) + 2;
+    const difference = Math.random() < 0.5 ? -baseDiff : baseDiff;
+
+    // Generate random start: 5 to 54
+    const startTerm = Math.floor(Math.random() * 50) + 5;
+
+    // Build 4-term sequence
+    const sequence = [];
+    let current = startTerm;
     for (let i = 0; i < 4; i++) {
-        currentSequence.push(term);
-        term += difference;
+        sequence.push(current);
+        current += difference;
     }
 
-    // 4. Calculate the correct answers
-    correctNextTerm = term;
-    correctDifference = difference;
-    
-    // 5. Display the sequence
-    document.getElementById('sequence-display').textContent = currentSequence.join(', ');
+    // Save state
+    gameState.sequence = sequence;
+    gameState.correctNextTerm = current;
+    gameState.correctDifference = difference;
 
-    // 6. Reset input fields and feedback
-    document.getElementById('next-term').value = '';
-    document.getElementById('difference').value = '';
-    document.getElementById('feedback').textContent = 'Enter your answers and click Submit.';
-    document.getElementById('feedback').className = 'feedback';
+    // Update UI
+    elements.sequenceDisplay.textContent = sequence.join(', ');
+    elements.nextTermInput.value = '';
+    elements.differenceInput.value = '';
+    elements.feedback.textContent = 'Enter your answers and click Submit.';
+    elements.feedback.className = 'feedback';
 }
 
 function checkAnswer() {
-    const userNextTerm = parseFloat(document.getElementById('next-term').value);
-    const userDifference = parseFloat(document.getElementById('difference').value);
-    const feedbackElement = document.getElementById('feedback');
-    
-    if (isNaN(userNextTerm) || isNaN(userDifference)) {
-        feedbackElement.textContent = 'Please enter numbers in both fields before submitting.';
-        feedbackElement.className = 'feedback incorrect';
+    const userNext = parseFloat(elements.nextTermInput.value);
+    const userDiff = parseFloat(elements.differenceInput.value);
+
+    if (isNaN(userNext) || isNaN(userDiff)) {
+        elements.feedback.textContent = 'Please enter numbers in both fields.';
+        elements.feedback.className = 'feedback incorrect';
         return;
     }
 
-    const isNextTermCorrect = userNextTerm === correctNextTerm;
-    const isDifferenceCorrect = userDifference === correctDifference;
-    
-    let message = '';
-    let isCorrect = false;
+    const isNextCorrect = userNext === gameState.correctNextTerm;
+    const isDiffCorrect = userDiff === gameState.correctDifference;
 
-    if (isNextTermCorrect && isDifferenceCorrect) {
-        message = `🎉 Correct! The next term is ${correctNextTerm} and the rule is to add ${correctDifference} to the preceding term.`;
-        feedbackElement.className = 'feedback correct';
-        score++;
-        isCorrect = true;
+    if (isNextCorrect && isDiffCorrect) {
+        // ✅ Fully correct
+        elements.feedback.textContent = `🎉 Correct! The next term is ${gameState.correctNextTerm} and the rule is to add ${gameState.correctDifference}.`;
+        elements.feedback.className = 'feedback correct';
+        gameState.score++;
+        playSound('correct-sound');
     } else {
-        let errorParts = [];
-        if (!isNextTermCorrect) {
-            errorParts.push(`Next Term is incorrect (Should be ${correctNextTerm})`);
-        }
-        if (!isDifferenceCorrect) {
-            errorParts.push(`Rule/Difference is incorrect (Should be ${correctDifference})`);
-        }
-        
-        message = `❌ Incorrect! ${errorParts.join(' | ')}`;
-        feedbackElement.className = 'feedback incorrect';
+        // ❌ Partial or fully wrong
+        const errors = [];
+        if (!isNextCorrect) errors.push(`Next term should be ${gameState.correctNextTerm}`);
+        if (!isDiffCorrect) errors.push(`Difference should be ${gameState.correctDifference}`);
+        elements.feedback.textContent = `❌ Incorrect! ${errors.join(' | ')}`;
+        elements.feedback.className = 'feedback incorrect';
+        playSound('wrong-sound');
     }
-    
-    // Display feedback
-    feedbackElement.textContent = message;
 
-    // Wait a moment before moving to the next question
-    setTimeout(generateNewSequence, 2500); // 2.5 second delay
+    // Auto-advance after delay
+    setTimeout(() => {
+        gameState.currentQuestion++;
+        generateSequence();
+    }, FEEDBACK_DELAY_MS);
 }
 
-// Initialize to the start screen when the page loads
-window.onload = () => showScreen('start-screen');
+function startGame() {
+    gameState.currentQuestion = 0;
+    gameState.score = 0;
+    showScreen('game-screen');
+    generateSequence();
+}
+
+function endGame() {
+    elements.finalScore.textContent = `Your final score: ${gameState.score}/${TOTAL_QUESTIONS}`;
+    showScreen('results-screen');
+}
+
+// ======================
+// INITIALIZATION
+// ======================
+document.addEventListener('DOMContentLoaded', () => {
+    showScreen('start-screen');
+});

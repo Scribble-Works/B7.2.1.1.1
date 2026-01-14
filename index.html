@@ -1,52 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Next in the Sequence Game (10 Questions)</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Next in the Sequence Game</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="container">
+    <h1>🔢 Next in the Sequence</h1>
+    <p class="subtitle">Extend the pattern and explain the difference!</p>
 
-    <div class="container">
-        <h1>🔢 Next in the Sequence</h1>
-        <p class="subtitle">Extend the pattern and explain the difference!</p>
-
-        <div id="start-screen" class="game-screen">
-            <h2>Ready to Test Your Pattern Skills?</h2>
-            <p>You will be given 10 sequences. For each one, identify the next term and the difference (the rule) between the elements.</p>
-            <button onclick="startGame()">Start Game</button>
-        </div>
-
-        <div id="game-screen" class="game-screen hidden">
-            <h3 id="question-counter">Question 1 of 10</h3>
-            <div class="sequence-display-box">
-                <span id="sequence-display"></span>
-            </div>
-
-            <div class="input-group">
-                <label for="next-term">What is the next term in the sequence?</label>
-                <input type="number" id="next-term" placeholder="e.g., 20">
-            </div>
-
-            <div class="input-group">
-                <label for="difference">What is the difference between each element?</label>
-                <input type="number" id="difference" placeholder="e.g., 5">
-            </div>
-
-            <button onclick="checkAnswer()">Submit Answer</button>
-            <div id="feedback" class="feedback"></div>
-        </div>
-
-        <div id="results-screen" class="game-screen hidden">
-            <h2>Game Over! 🏆</h2>
-            <p>You completed all 10 questions.</p>
-            <h3 id="final-score">Your final score: 0/10</h3>
-            <p>Great job extending the relations and explaining the differences!</p>
-            <button onclick="startGame()">Play Again</button>
-        </div>
+    <!-- Start Screen -->
+    <div id="start-screen" class="game-screen">
+      <h2>Ready to Test Your Pattern Skills?</h2>
+      <p>You will be given 10 sequences. For each one, identify the next term and the difference (the rule) between the elements.</p>
+      <button onclick="startGame()">Start Game</button>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Game Screen -->
+    <div id="game-screen" class="game-screen hidden">
+      <h3 id="question-counter">Question 1 of 10</h3>
+      <div class="sequence-display-box">
+        <span id="sequence-display">2, 7, 12, 17</span>
+      </div>
+
+      <div class="input-group">
+        <label for="next-term">What is the next term in the sequence?</label>
+        <input type="number" id="next-term" placeholder="e.g., 22" />
+      </div>
+
+      <div class="input-group">
+        <label for="difference">What is the difference between each element?</label>
+        <input type="number" id="difference" placeholder="e.g., 5" />
+      </div>
+
+      <button onclick="checkAnswer()">Submit Answer</button>
+      <div id="feedback" class="feedback">Enter your answers and click Submit.</div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="game-screen hidden">
+      <h2>Game Over! 🏆</h2>
+      <p>You completed all 10 questions.</p>
+      <h3 id="final-score">Your final score: 0/10</h3>
+      <p>Great job extending the relations and explaining the differences!</p>
+      <button onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Sound Effects (required for script.js) -->
+  <audio id="correct-sound" src="asset/brass-fanfare-reverberated-146263.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="asset/cartoon-fail-trumpet-278822.mp3" preload="auto"></audio>
+
+  <!-- Game Logic -->
+  <script src="script.js"></script>
 </body>
 </html>
